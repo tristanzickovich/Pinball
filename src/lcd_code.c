@@ -200,16 +200,16 @@ void addLowScore_Tick(){
 	switch(lowScore_state){
 		case lowWait:
 			distVal = ADC;
-			//if(distVal < irLow && !gameover){
-				//lowScore_state = lowAdd;
-				unsigned char test[20];
-				itoa(distVal, test, 10);
-				LCD_DisplayString(1,test);
+			if(distVal < irLow && !gameover){
+				lowScore_state = lowAdd;
+				//unsigned char test[20];
+				//itoa(distVal, test, 10);
+				//LCD_DisplayString(1,test);
 				//if(distVal < 110)
 				//	delay_ms(3000);
-				//updateScore(50);
+				updateScore(50);
 				lsdelay = 0;
-			//}
+			}
 			break;
 		case lowAdd:
 			if(lsdelay > 100)
@@ -236,9 +236,6 @@ void addMidScore_Tick(){
 			distVal = ADC;
 			if(distVal < irMid && !gameover){
 				midScore_state = midAdd;
-				//unsigned char test[20];
-				//itoa(distVal, test, 10);
-				//LCD_DisplayString(1,test);
 				updateScore(100);
 				msdelay = 0;
 			}
@@ -268,9 +265,6 @@ void addTopScore_Tick(){
 			distVal = ADC;
 			if(distVal < irTop && !gameover){
 				topScore_state = topAdd;
-				//unsigned char test[20];
-				//itoa(distVal, test, 10);
-				//LCD_DisplayString(1,test);
 				updateScore(500);
 				tsdelay = 0;
 			}
@@ -300,9 +294,6 @@ void loseCredit_Tick(){
 			distVal = ADC;
 			if(distVal < irLose && !gameover){
 				loseCredit_state = loseSubtract;
-				//unsigned char test[20];
-				//itoa(distVal, test, 10);
-				//LCD_DisplayString(1,test);
 				updateCredits(-1);
 				lcdelay = 0;
 			}

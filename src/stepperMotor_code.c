@@ -1,7 +1,7 @@
 /*
 *   Tristan Zickovich   tzick002@ucr.edu
 *   Lab Section: 23
-*   Assignment: Lab# 10 Final Project
+*   Assignment: Lab# 10 Final Project : Code for Stepper Motor and LED Matrix
 *   I acknowledge all content contained herein, excluding template or example
 *   code, is my own original work
 */
