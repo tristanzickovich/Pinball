@@ -70,6 +70,7 @@ void LCD_Tick() {
 					lcd_state = wait;
 					screenFormat();
 					delayCounter = 0;
+					gameover = 0;
 				}
 			}
 			break;
@@ -88,6 +89,17 @@ void LCD_Tick() {
 				godelay = 0;
 				LCD_DisplayString(1,"   Game OVER!     Score: ");
 				sendScore(25);
+			}
+			//joystick functionality for flippers
+			else if(jsRead < basevallow){ //left
+				PORTB = SetBit(PORTB, 2, 1);
+				delay_ms(100);
+				PORTB = SetBit(PORTB, 2, 0);
+			}
+			else if(jsRead > basevalhigh){ //right
+				PORTB = SetBit(PORTB, 1, 1);
+				delay_ms(100);
+				PORTB = SetBit(PORTB, 1, 0);
 			}
 			break;
 		case lcdgameover:
@@ -345,8 +357,8 @@ void blueTooth_Tick(){
 				else if(btdata == 0xB){ //- 1 life
 					updateCredits(-1);
 				}
+				LCD_Cursor(0);
 			}
-			
 			break;
 		default:
 			break;
