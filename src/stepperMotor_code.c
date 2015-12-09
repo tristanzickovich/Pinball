@@ -22,15 +22,12 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "croutine.h"
-#include "sonar.h"
-#include "sonar.c"
 
 enum MotorTrigger_States {standbyMotor, updatemotor, resetposition} motortrigger_state;
 enum Motor_States {rotateMotor} motor_state;
 enum GameStart_States {gamewait, gameplay} gamestart_state;
 enum Motion_States {wait, flicker} motion_state;
 enum DisplayMatrix_States {cue, display} display_state;
-enum USD_States {waitmotion, motiondetected}usd_state;
 	
 //customizable variables matrix
 unsigned char flick_timer = 0; //how long it stalls before switching patterns for flicker
@@ -60,7 +57,6 @@ void MotorTrigger_Init(){
 	gamestart_state = gamewait;
 	display_state = display;
 	motion_state = wait;
-	usd_state = waitmotion;
 }
 
 //0-2 ccw, 3-5 cw
@@ -243,41 +239,6 @@ void DisplayMatrix_Tick(){ //illuminates matrix
 	}
 }
 
-
-void USD_Tick(){
-	int sonarDist = 0;
-	unsigned char boardwidth = 200;
-	switch(usd_state){
-		case waitmotion:
-			PORTD = 0xFE;
-			sonarDist = read_sonar();
-			sonarDist = sonarDist - (sonarDist % 10);
-			if(sonarDist != 0)
-				PORTC = sonarDist;
-			if(sonarDist != TRIG_ERROR && sonarDist != ECHO_ERROR && sonarDist < 10){
-				//usd_state = motiondetected;
-				flickTriggered = 1;
-				//SetBit(PORTA, 4, 0);
-			}
-			break;
-		case motiondetected:
-			PORTC = 0x00;
-			//if(!flickTriggered)
-				//usd_state = waitmotion;
-			if(!GetBit(PINA, 0))
-				usd_state = waitmotion;
-				
-			break;
-		default:
-			usd_state = waitmotion;
-			break;
-	}
-	switch(usd_state){
-		default:
-			break;
-	}
-}
-
 void DisplayMatrixTask()
 {
 	for(;;)  //while(1)
@@ -315,16 +276,6 @@ void GameStartTask(){
 	}
 }
 
-void USDTask()
-{
-	for(;;)  //while(1)
-	{
-		USD_Tick();
-		_delay_ms(1000);
-		//vTaskDelay(1000);
-	}
-}
-
 void StartSecPulse(unsigned portBASE_TYPE Priority)
 {
 	xTaskCreate(GameStartTask, (signed portCHAR *)"GameStartTask", configMINIMAL_STACK_SIZE, NULL, Priority, NULL);
@@ -332,7 +283,6 @@ void StartSecPulse(unsigned portBASE_TYPE Priority)
 	xTaskCreate(MotorTask, (signed portCHAR *)"MotorTask", configMINIMAL_STACK_SIZE, NULL, 3, NULL);
 	xTaskCreate(MotionTask, (signed portCHAR *)"MotionTask", configMINIMAL_STACK_SIZE, NULL, 4, NULL );
 	xTaskCreate(DisplayMatrixTask, (signed portCHAR *)"DisplayMatrixTask", configMINIMAL_STACK_SIZE, NULL, 5, NULL);
-	//xTaskCreate(USDTask, (signed portCHAR *)"USDTask", configMINIMAL_STACK_SIZE, NULL, 1, NULL );
 }
 
 int main(void)
@@ -341,7 +291,6 @@ int main(void)
 	DDRB = 0x7F; PORTB = 0x80;
 	DDRC = 0xFF; PORTC = 0x00;
 	DDRD = 0xFF; PORTD = 0x00;
-	//init_sonar();
 	//Start Tasks
 	StartSecPulse(1);
 	//RunScheduler
