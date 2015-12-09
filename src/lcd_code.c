@@ -315,7 +315,7 @@ void loseCredit_Tick(){
 }
 
 void blueTooth_Tick(){
-	static unsigned char btdata = 0;
+	static unsigned short btdata = 0;
 	switch(blueTooth_state){
 		case btwait:
 			if(!gameover){
@@ -329,18 +329,21 @@ void blueTooth_Tick(){
 			else if(USART_HasReceived(0)){
 				btdata = USART_Receive(0);
 				USART_Flush(0);
-				//if(btdata == 0xFF)
-					//LCD_DisplayString(1, "Left!");
-				//else if(btdata == 0xEE)
-					//LCD_DisplayString(1, "Right!");
-				//else if(btdata == 0xAA)
-					//LCD_DisplayString(1, "+1 life!");
-				//else if(btdata == 0x00)
-					//LCD_DisplayString(1, "lose 1 life!");
 				if(btdata == 0xFF){ //left
-					PORTB = SetBit(PORTB, 0, 1);
+					PORTB = SetBit(PORTB, 2, 1);
 					delay_ms(100);
-					PORTB = SetBit(PORTB, 0, 0);
+					PORTB = SetBit(PORTB, 2, 0);
+				}
+				else if(btdata == 0xEE){ //right
+					PORTB = SetBit(PORTB, 1, 1);
+					delay_ms(100);
+					PORTB = SetBit(PORTB, 1, 0);
+				}
+				else if(btdata == 0xA){ //+ 1 life
+					updateCredits(1);
+				}
+				else if(btdata == 0xB){ //- 1 life
+					updateCredits(-1);
 				}
 			}
 			

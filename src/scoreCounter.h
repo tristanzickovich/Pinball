@@ -143,7 +143,7 @@ void updateCredits(signed char newCredits){
 		}
 		else{
 			gameover = 1;
-			//add game over code
+			PORTB = SetBit(PORTB, 0, 0);
 		}
 	}
 	sendCredits(credit0,L1,L2,creditAddress0,DN);
@@ -246,6 +246,7 @@ void reconfigureGame(){
 	for(i = 0; i < 5; ++i){
 		scores[i] = 0;
 	}
+	PORTB = SetBit(PORTB, 0, 1);
 }
 //4 ->, 5 <-
 void waitStartMessage(){

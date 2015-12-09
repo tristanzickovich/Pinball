@@ -27,13 +27,12 @@
 
 enum MotorTrigger_States {standbyMotor, updatemotor, resetposition} motortrigger_state;
 enum Motor_States {rotateMotor} motor_state;
-enum GameStart_States {gamewait, gwstall, gameplay} gamestart_state;
+enum GameStart_States {gamewait, gameplay} gamestart_state;
 enum Motion_States {wait, flicker} motion_state;
 enum DisplayMatrix_States {cue, display} display_state;
 enum USD_States {waitmotion, motiondetected}usd_state;
 	
 //customizable variables matrix
-unsigned char flicker_duration = 50; //how long LED matrix flickers when triggered
 unsigned char flick_timer = 0; //how long it stalls before switching patterns for flicker
 unsigned char patts[] = {0x55, 0xAA}; //patterns for matrix
 unsigned char rows[] = {0xFE, 0xFD, 0xFB, 0xF7, 0xEF}; //which rows light pattern
@@ -151,23 +150,18 @@ void Motor_Tick(){ //drives motor
 	for(bumcounter = 0; bumcounter < 4; ++bumcounter){	//send signal to motor
 		PORTB = SetBit(PORTB, bumcounter, GetBit(displayvalue, bumcounter));
 	}
-	//PORTB = displayvalue;
 }
 
 void GameStart_Tick(){ //awaits game start button press
 	switch(gamestart_state){
 		case gamewait:
-			if(!GetBit(PINA, 0))
-				gamestart_state = gwstall;
-			break;
-		case gwstall:
-			if(GetBit(PINA, 0)){
+			if(GetBit(PINB, 7)){
 				gamestart_state = gameplay;
 				initGoalie = 1;
 			}
 			break;
 		case gameplay:
-			if(!GetBit(PINA, 1)){
+			if(!GetBit(PINB, 7)){
 				gamestart_state = gamewait;
 				initGoalie = 0;
 			}
@@ -181,15 +175,15 @@ void GameStart_Tick(){ //awaits game start button press
 	}
 }
 
-void Motion_Tick() { //waits for ball to cross motion line to light matrix
+void Motion_Tick() {
 	switch (motion_state) {
 		case wait:
-		if(flickTriggered){		//if motion was detected, trigger matrix flicker cycle
-			flickerDurationCounter = 0;
-			motion_state = flicker;
-		}
+			if(initGoalie){		//if motion was detected, trigger matrix flicker cycle
+				motion_state = flicker;
+				flickTriggered = 1;
+			}
 		case flicker:
-			if(flickerDurationCounter >= flicker_duration){
+			if(!initGoalie){
 				motion_state = wait;
 				flickTriggered = 0;
 			}
@@ -206,7 +200,6 @@ void Motion_Tick() { //waits for ball to cross motion line to light matrix
 				flick_timer = 0;
 				design = !design;
 			}
-			++flickerDurationCounter;
 			break;
 		default:
 			break;
@@ -249,49 +242,8 @@ void DisplayMatrix_Tick(){ //illuminates matrix
 			break;
 	}
 }
-/*
-void sonar_tick() [
-	case init:
-	break;
-	case trigger:
-		PORTB &= 0x10;
-	break;
-	case echo:
-		PORTB &= 0x20;
-	break;
-}
-*/
-void USD_Tick(){
-	int sonarDist = 0;
-	unsigned char boardwidth = 200;
-	switch(usd_state){
-		case waitmotion:
-			sonarDist = read_sonar();
-			if(sonarDist != TRIG_ERROR && sonarDist != ECHO_ERROR){
-				PORTC = 0xAA;
-				PORTD = 0x00;
-			}
-			else if(sonarDist == TRIG_ERROR) {
-				PORTC = 0x10;
-				PORTD = 0x00;
-			}
-			else if(sonarDist == ECHO_ERROR) {
-				PORTC = 0x0A;
-				PORTD = 0x00;
-			}
-		break;
-		case motiondetected:
-			break;
-		default:
-			usd_state = waitmotion;
-			break;
-	}
-	switch(usd_state){
-		default:
-		break;
-	}
-}
-/*
+
+
 void USD_Tick(){
 	int sonarDist = 0;
 	unsigned char boardwidth = 200;
@@ -324,7 +276,7 @@ void USD_Tick(){
 		default:
 			break;
 	}
-}*/
+}
 
 void DisplayMatrixTask()
 {
@@ -386,7 +338,7 @@ void StartSecPulse(unsigned portBASE_TYPE Priority)
 int main(void)
 {
 	DDRA = 0x00; PORTA = 0xFF;
-	DDRB = 0x1F; PORTB = 0xF0;
+	DDRB = 0x7F; PORTB = 0x80;
 	DDRC = 0xFF; PORTC = 0x00;
 	DDRD = 0xFF; PORTD = 0x00;
 	//init_sonar();
